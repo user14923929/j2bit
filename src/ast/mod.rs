@@ -8,9 +8,13 @@ pub struct Program {
 pub struct ClassDecl {
     pub name: String,
     pub methods: Vec<MethodDecl>,
+    /// Поля класса — будут использоваться в v0.2 (instance support)
+    #[allow(dead_code)]
     pub fields: Vec<FieldDecl>,
 }
 
+/// Поле класса — будет использоваться в v0.2 (instance support)
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct FieldDecl {
     pub vis: Visibility,
@@ -22,6 +26,8 @@ pub struct FieldDecl {
 
 #[derive(Debug, Clone)]
 pub struct MethodDecl {
+    /// Видимость — будет использоваться при генерации заголовочных файлов
+    #[allow(dead_code)]
     pub vis: Visibility,
     pub is_static: bool,
     pub return_ty: Type,
@@ -154,6 +160,8 @@ pub enum Stmt {
         body: Vec<Stmt>,
     },
 
+    /// for-loop — будет использоваться в v0.2
+    #[allow(dead_code)]
     For {
         init: Option<Box<Stmt>>,
         cond: Option<Expr>,
