@@ -41,17 +41,17 @@ pub enum TokenKind {
     Star,
     Slash,
     Percent,
-    Eq,       // =
-    EqEq,     // ==
-    NotEq,    // !=
-    Lt,       // <
-    LtEq,     // <=
-    Gt,       // >
-    GtEq,     // >=
-    And,      // &&
-    Or,       // ||
-    Not,      // !
-    Dot,      // .
+    Eq,    // =
+    EqEq,  // ==
+    NotEq, // !=
+    Lt,    // <
+    LtEq,  // <=
+    Gt,    // >
+    GtEq,  // >=
+    And,   // &&
+    Or,    // ||
+    Not,   // !
+    Dot,   // .
     Comma,
     Semicolon,
     Colon,
@@ -135,10 +135,18 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>> {
                     col += 1;
                 }
                 let num: f64 = chars[start..i].iter().collect::<String>().parse()?;
-                tokens.push(Token { kind: TokenKind::FloatLiteral(num), line, col: start_col });
+                tokens.push(Token {
+                    kind: TokenKind::FloatLiteral(num),
+                    line,
+                    col: start_col,
+                });
             } else {
                 let num: i64 = chars[start..i].iter().collect::<String>().parse()?;
-                tokens.push(Token { kind: TokenKind::IntLiteral(num), line, col: start_col });
+                tokens.push(Token {
+                    kind: TokenKind::IntLiteral(num),
+                    line,
+                    col: start_col,
+                });
             }
             continue;
         }
@@ -149,14 +157,20 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>> {
             col += 1;
             let start = i;
             while i < chars.len() && chars[i] != '"' {
-                if chars[i] == '\n' { bail!("unterminated string at line {line}"); }
+                if chars[i] == '\n' {
+                    bail!("unterminated string at line {line}");
+                }
                 i += 1;
                 col += 1;
             }
             let s: String = chars[start..i].iter().collect();
             i += 1; // закрывающая "
             col += 1;
-            tokens.push(Token { kind: TokenKind::StringLiteral(s), line, col: start_col });
+            tokens.push(Token {
+                kind: TokenKind::StringLiteral(s),
+                line,
+                col: start_col,
+            });
             continue;
         }
 
@@ -169,27 +183,31 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>> {
             }
             let word: String = chars[start..i].iter().collect();
             let kind = match word.as_str() {
-                "class"   => TokenKind::Class,
-                "void"    => TokenKind::Void,
-                "return"  => TokenKind::Return,
-                "if"      => TokenKind::If,
-                "else"    => TokenKind::Else,
-                "while"   => TokenKind::While,
-                "for"     => TokenKind::For,
-                "new"     => TokenKind::New,
-                "static"  => TokenKind::Static,
-                "public"  => TokenKind::Public,
+                "class" => TokenKind::Class,
+                "void" => TokenKind::Void,
+                "return" => TokenKind::Return,
+                "if" => TokenKind::If,
+                "else" => TokenKind::Else,
+                "while" => TokenKind::While,
+                "for" => TokenKind::For,
+                "new" => TokenKind::New,
+                "static" => TokenKind::Static,
+                "public" => TokenKind::Public,
                 "private" => TokenKind::Private,
-                "final"   => TokenKind::Final,
-                "int"     => TokenKind::Int,
-                "float"   => TokenKind::Float,
+                "final" => TokenKind::Final,
+                "int" => TokenKind::Int,
+                "float" => TokenKind::Float,
                 "boolean" => TokenKind::Bool,
-                "String"  => TokenKind::StringType,
-                "true"    => TokenKind::BoolLiteral(true),
-                "false"   => TokenKind::BoolLiteral(false),
-                _         => TokenKind::Ident(word),
+                "String" => TokenKind::StringType,
+                "true" => TokenKind::BoolLiteral(true),
+                "false" => TokenKind::BoolLiteral(false),
+                _ => TokenKind::Ident(word),
             };
-            tokens.push(Token { kind, line, col: start_col });
+            tokens.push(Token {
+                kind,
+                line,
+                col: start_col,
+            });
             continue;
         }
 
@@ -209,7 +227,11 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>> {
             ('|', '|') => Some(TokenKind::Or),
             _ => None,
         }) {
-            tokens.push(Token { kind, line, col: start_col });
+            tokens.push(Token {
+                kind,
+                line,
+                col: start_col,
+            });
             i += 2;
             col += 2;
             continue;
@@ -236,13 +258,24 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>> {
             '}' => TokenKind::RBrace,
             '[' => TokenKind::LBracket,
             ']' => TokenKind::RBracket,
-            other => bail!("unexpected character '{}' at line {line}, col {start_col}", other),
+            other => bail!(
+                "unexpected character '{}' at line {line}, col {start_col}",
+                other
+            ),
         };
-        tokens.push(Token { kind, line, col: start_col });
+        tokens.push(Token {
+            kind,
+            line,
+            col: start_col,
+        });
         i += 1;
         col += 1;
     }
 
-    tokens.push(Token { kind: TokenKind::Eof, line, col });
+    tokens.push(Token {
+        kind: TokenKind::Eof,
+        line,
+        col,
+    });
     Ok(tokens)
 }

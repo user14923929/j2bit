@@ -80,7 +80,11 @@ fn run(cli: Cli) -> Result<()> {
             // Parse
             let program = parser::parse(tokens)?;
             if verbose {
-                eprintln!("{} {} declarations", "    Parsed".cyan(), program.classes.len());
+                eprintln!(
+                    "{} {} declarations",
+                    "    Parsed".cyan(),
+                    program.classes.len()
+                );
             }
 
             // Codegen

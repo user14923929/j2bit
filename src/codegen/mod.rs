@@ -15,7 +15,10 @@ struct CodeGen {
 
 impl CodeGen {
     fn new() -> Self {
-        Self { output: String::new(), indent: 0 }
+        Self {
+            output: String::new(),
+            indent: 0,
+        }
     }
 
     fn emit(&mut self, s: &str) {
@@ -74,13 +77,18 @@ impl CodeGen {
         self.emit("    uBit.init();\n");
 
         // Если есть класс с методом `main`, вызываем его
-        let has_main = program.classes.iter().any(|c| {
-            c.methods.iter().any(|m| m.name == "main" && m.is_static)
-        });
+        let has_main = program
+            .classes
+            .iter()
+            .any(|c| c.methods.iter().any(|m| m.name == "main" && m.is_static));
         if has_main {
             // Ищем класс с main
             for class in &program.classes {
-                if class.methods.iter().any(|m| m.name == "main" && m.is_static) {
+                if class
+                    .methods
+                    .iter()
+                    .any(|m| m.name == "main" && m.is_static)
+                {
                     self.emit(&format!("    {}__main();\n", class.name));
                 }
             }
@@ -135,16 +143,24 @@ impl CodeGen {
                 }
             }
 
-            Stmt::If { cond, then_body, else_body } => {
+            Stmt::If {
+                cond,
+                then_body,
+                else_body,
+            } => {
                 let c = self.emit_expr(cond)?;
                 self.line(&format!("if ({c}) {{"));
                 self.indent += 1;
-                for s in then_body { self.emit_stmt(s)?; }
+                for s in then_body {
+                    self.emit_stmt(s)?;
+                }
                 self.indent -= 1;
                 if let Some(eb) = else_body {
                     self.line("} else {");
                     self.indent += 1;
-                    for s in eb { self.emit_stmt(s)?; }
+                    for s in eb {
+                        self.emit_stmt(s)?;
+                    }
                     self.indent -= 1;
                 }
                 self.line("}");
@@ -154,12 +170,19 @@ impl CodeGen {
                 let c = self.emit_expr(cond)?;
                 self.line(&format!("while ({c}) {{"));
                 self.indent += 1;
-                for s in body { self.emit_stmt(s)?; }
+                for s in body {
+                    self.emit_stmt(s)?;
+                }
                 self.indent -= 1;
                 self.line("}");
             }
 
-            Stmt::For { init, cond, update, body } => {
+            Stmt::For {
+                init,
+                cond,
+                update,
+                body,
+            } => {
                 let init_str = match init {
                     Some(s) => {
                         // Временно буферизуем
@@ -181,7 +204,9 @@ impl CodeGen {
                 };
                 self.line(&format!("for ({init_str}; {cond_str}; {update_str}) {{"));
                 self.indent += 1;
-                for s in body { self.emit_stmt(s)?; }
+                for s in body {
+                    self.emit_stmt(s)?;
+                }
                 self.indent -= 1;
                 self.line("}");
             }
@@ -193,11 +218,17 @@ impl CodeGen {
 
     fn emit_expr(&mut self, expr: &Expr) -> Result<String> {
         Ok(match expr {
-            Expr::IntLit(n)   => n.to_string(),
+            Expr::IntLit(n) => n.to_string(),
             Expr::FloatLit(f) => format!("{f}f"),
-            Expr::StrLit(s)   => format!("ManagedString(\"{s}\")"),
-            Expr::BoolLit(b)  => if *b { "true".into() } else { "false".into() },
-            Expr::Ident(n)    => n.clone(),
+            Expr::StrLit(s) => format!("ManagedString(\"{s}\")"),
+            Expr::BoolLit(b) => {
+                if *b {
+                    "true".into()
+                } else {
+                    "false".into()
+                }
+            }
+            Expr::Ident(n) => n.clone(),
 
             Expr::Assign { target, value } => {
                 let t = self.emit_expr(target)?;
@@ -209,19 +240,19 @@ impl CodeGen {
                 let l = self.emit_expr(lhs)?;
                 let r = self.emit_expr(rhs)?;
                 let op_str = match op {
-                    BinOp::Add   => "+",
-                    BinOp::Sub   => "-",
-                    BinOp::Mul   => "*",
-                    BinOp::Div   => "/",
-                    BinOp::Mod   => "%",
-                    BinOp::Eq    => "==",
+                    BinOp::Add => "+",
+                    BinOp::Sub => "-",
+                    BinOp::Mul => "*",
+                    BinOp::Div => "/",
+                    BinOp::Mod => "%",
+                    BinOp::Eq => "==",
                     BinOp::NotEq => "!=",
-                    BinOp::Lt    => "<",
-                    BinOp::LtEq  => "<=",
-                    BinOp::Gt    => ">",
-                    BinOp::GtEq  => ">=",
-                    BinOp::And   => "&&",
-                    BinOp::Or    => "||",
+                    BinOp::Lt => "<",
+                    BinOp::LtEq => "<=",
+                    BinOp::Gt => ">",
+                    BinOp::GtEq => ">=",
+                    BinOp::And => "&&",
+                    BinOp::Or => "||",
                 };
                 format!("({l} {op_str} {r})")
             }
@@ -239,13 +270,17 @@ impl CodeGen {
                 format!("{obj}.{field}")
             }
 
-            Expr::MethodCall { object, method, args } => {
-                map_method_call(self, object, method, args)?
-            }
+            Expr::MethodCall {
+                object,
+                method,
+                args,
+            } => map_method_call(self, object, method, args)?,
 
-            Expr::StaticCall { class, method, args } => {
-                map_static_call(self, class, method, args)?
-            }
+            Expr::StaticCall {
+                class,
+                method,
+                args,
+            } => map_static_call(self, class, method, args)?,
 
             Expr::New { class, args } => {
                 let args_str = self.emit_args(args)?;
@@ -266,20 +301,25 @@ impl CodeGen {
 // ── Маппинг Java API → CODAL API ────────────────────────────
 
 /// Метод на объекте: obj.method(args)
-fn map_method_call(gen: &mut CodeGen, object: &Expr, method: &str, args: &[Expr]) -> Result<String> {
+fn map_method_call(
+    gen: &mut CodeGen,
+    object: &Expr,
+    method: &str,
+    args: &[Expr],
+) -> Result<String> {
     // Спецобработка для микробитовых объектов
     if let Expr::Ident(obj_name) = object {
         let codal = match (obj_name.as_str(), method) {
             // display.show("hello") → uBit.display.scroll("hello")
-            ("display", "show")   => {
+            ("display", "show") => {
                 let a = gen.emit_args(args)?;
                 return Ok(format!("uBit.display.scroll({a})"));
             }
-            ("display", "print")  => {
+            ("display", "print") => {
                 let a = gen.emit_args(args)?;
                 return Ok(format!("uBit.display.print({a})"));
             }
-            ("display", "clear")  => return Ok("uBit.display.clear()".into()),
+            ("display", "clear") => return Ok("uBit.display.clear()".into()),
             ("display", "enable") => return Ok("uBit.display.enable(true)".into()),
 
             // buttons
@@ -287,7 +327,7 @@ fn map_method_call(gen: &mut CodeGen, object: &Expr, method: &str, args: &[Expr]
             ("buttonB", "isPressed") => return Ok("uBit.buttonB.isPressed()".into()),
 
             // sleep → fiber_sleep
-            ("basic", "pause")    => {
+            ("basic", "pause") => {
                 let a = gen.emit_args(args)?;
                 return Ok(format!("fiber_sleep({a})"));
             }
@@ -315,11 +355,26 @@ fn map_method_call(gen: &mut CodeGen, object: &Expr, method: &str, args: &[Expr]
 fn map_static_call(gen: &mut CodeGen, class: &str, method: &str, args: &[Expr]) -> Result<String> {
     match (class, method) {
         // Math
-        ("Math", "abs")   => { let a = gen.emit_args(args)?; Ok(format!("abs({a})")) }
-        ("Math", "max")   => { let a = gen.emit_args(args)?; Ok(format!("max({a})")) }
-        ("Math", "min")   => { let a = gen.emit_args(args)?; Ok(format!("min({a})")) }
-        ("Math", "sqrt")  => { let a = gen.emit_args(args)?; Ok(format!("sqrtf({a})")) }
-        ("Math", "random")=> { let a = gen.emit_args(args)?; Ok(format!("uBit.random({a})")) }
+        ("Math", "abs") => {
+            let a = gen.emit_args(args)?;
+            Ok(format!("abs({a})"))
+        }
+        ("Math", "max") => {
+            let a = gen.emit_args(args)?;
+            Ok(format!("max({a})"))
+        }
+        ("Math", "min") => {
+            let a = gen.emit_args(args)?;
+            Ok(format!("min({a})"))
+        }
+        ("Math", "sqrt") => {
+            let a = gen.emit_args(args)?;
+            Ok(format!("sqrtf({a})"))
+        }
+        ("Math", "random") => {
+            let a = gen.emit_args(args)?;
+            Ok(format!("uBit.random({a})"))
+        }
 
         // System.out.println → serial
         ("System", _) if method.starts_with("out") => {
@@ -328,20 +383,32 @@ fn map_static_call(gen: &mut CodeGen, class: &str, method: &str, args: &[Expr]) 
         }
 
         // micro:bit display API (вызывается как StaticCall display.show(...))
-        ("display", "show")    => { let a = gen.emit_args(args)?; Ok(format!("uBit.display.scroll({a})")) }
-        ("display", "print")   => { let a = gen.emit_args(args)?; Ok(format!("uBit.display.print({a})")) }
-        ("display", "clear")   => Ok("uBit.display.clear()".into()),
-        ("display", "enable")  => Ok("uBit.display.enable(true)".into()),
+        ("display", "show") => {
+            let a = gen.emit_args(args)?;
+            Ok(format!("uBit.display.scroll({a})"))
+        }
+        ("display", "print") => {
+            let a = gen.emit_args(args)?;
+            Ok(format!("uBit.display.print({a})"))
+        }
+        ("display", "clear") => Ok("uBit.display.clear()".into()),
+        ("display", "enable") => Ok("uBit.display.enable(true)".into()),
 
         // micro:bit buttons
         ("buttonA", "isPressed") => Ok("uBit.buttonA.isPressed()".into()),
         ("buttonB", "isPressed") => Ok("uBit.buttonB.isPressed()".into()),
 
         // basic.pause → fiber_sleep
-        ("basic", "pause")     => { let a = gen.emit_args(args)?; Ok(format!("fiber_sleep({a})")) }
+        ("basic", "pause") => {
+            let a = gen.emit_args(args)?;
+            Ok(format!("fiber_sleep({a})"))
+        }
 
         // serial
-        ("serial", "println")  => { let a = gen.emit_args(args)?; Ok(format!("uBit.serial.send({a})")) }
+        ("serial", "println") => {
+            let a = gen.emit_args(args)?;
+            Ok(format!("uBit.serial.send({a})"))
+        }
 
         // Всё остальное — прямой вызов
         _ => {
@@ -355,13 +422,13 @@ fn map_static_call(gen: &mut CodeGen, class: &str, method: &str, args: &[Expr]) 
 
 fn emit_type(ty: &Type) -> String {
     match ty {
-        Type::Void         => "void".into(),
-        Type::Int          => "int".into(),
-        Type::Float        => "float".into(),
-        Type::Bool         => "bool".into(),
-        Type::Str          => "ManagedString".into(),
+        Type::Void => "void".into(),
+        Type::Int => "int".into(),
+        Type::Float => "float".into(),
+        Type::Bool => "bool".into(),
+        Type::Str => "ManagedString".into(),
         Type::Array(inner) => format!("{}*", emit_type(inner)),
-        Type::Named(n)     => n.clone(),
+        Type::Named(n) => n.clone(),
     }
 }
 
